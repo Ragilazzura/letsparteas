@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Let’s Parteas! POS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+html {
+  scroll-behavior: smooth;
+}
+
+button:active {
+  transform: scale(0.92);
+  filter: brightness(1.2);
+}
+
+.card {
+  transition: all 0.2s ease;
+}
+
+.card:active {
+  transform: scale(0.97);
+}
+
+.fade-page {
+  animation: fadePage 0.2s ease;
+}
+
+@keyframes fadePage {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bottom-nav button.active-tab {
+  transform: scale(1.1);
+}
+
+.header-logo {
+  animation: logoPulse 2s infinite ease-in-out,
+             logoColor 6s infinite linear;
+  transition: all 0.3s ease;
+  height: 26px;
+  background: white;
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(34,197,94,0.5);
+}
+
+@keyframes logoPulse {
+  0% { transform: scale(1); box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+  50% { transform: scale(1.08); box-shadow: 0 0 18px rgba(34,197,94,0.9); }
+  100% { transform: scale(1); box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+}
+
+@keyframes logoColor {
+  0% { filter: hue-rotate(0deg); }
+  50% { filter: hue-rotate(20deg); }
+  100% { filter: hue-rotate(0deg); }
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  background: rgba(2,6,23,0.8);
+  backdrop-filter: blur(10px);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-bottom: 1px solid #334155;
+  z-index: 1000;
+}
+
+.app {
+  max-width: 420px;
+  margin: auto;
+  padding: 12px;
+  padding-bottom: 80px;
+}
+
+h2 {
+  margin-top: 24px;
+}
+
+button {
+  transition: all 0.2s ease;
+  width: 100%;
+  padding: 12px;
+  margin: 6px 0;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #22c55e, #4ade80);
+  box-shadow: 0 4px 10px rgba(34,197,94,0.3);
+  color: white;
+}
+
+.card, .report, .cart-item {
+  background: #1e293b;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+#payment {
+  font-size: 22px;
+  letter-spacing: 1px;
+  border: 1px solid #334155;
+  width: 100%;
+  max-width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  background: #1e293b;
+  border-radius: 12px;
+  color: #22c55e;
+  text-align: center;
+}
+
+#menu button {
+  text-align: left;
+  padding-left: 14px;
+}
+
+#dashboard, #cashier {
+  transition: all 0.3s ease;
+}
+
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+  color: white;
+  overflow-x: hidden;
+  touch-action: manipulation;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#splash {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: #020617;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 9999;
+  animation: fadeOut 1s ease 2s forwards;
+}
+
+#splash img {
+  width: 100px;
+  background: white;
+  padding: 15px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(34,197,94,0.5);
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; visibility: hidden; }
+}
+
+.quick-cash {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.quick-cash button {
+  flex: 1 1 48%;
+  background: #38bdf8;
+  box-shadow: 0 4px 10px rgba(56,189,248,0.3);
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 5px;
+}
+
+.keypad button {
+  background: #334155;
+  box-shadow: none;
+}
+
+.card, .report {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.report {
+  border-left: 4px solid #22c55e;
+}
+
+canvas {
+  width: 100% !important;
+  max-height: 200px;
+}
+
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.popup-box {
+  background: #020617;
+  padding: 20px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 350px;
+  text-align: center;
+}
+
+.spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.queue-card {
+  background: #1e293b;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 12px;
+  transition: 0.3s;
+}
+
+.waiting { border-left: 5px solid #facc15; background: rgba(250,204,21,0.08); }
+.making { border-left: 5px solid #38bdf8; background: rgba(56,189,248,0.08); }
+.done { border-left: 5px solid #22c55e; background: rgba(34,197,94,0.08); }
+
+.pulse {
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  background: #020617;
+  border-top: 1px solid #334155;
+  padding: 2px 0;
+  height: 55px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.4);
+  z-index: 1000;
+}
+
+.bottom-nav button {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 11px;
+  margin: 0;
+  box-shadow: none;
+}
+
+.bottom-nav .icon {
+  font-size: 18px;
+}
+
+.active-tab {
+  color: #22c55e !important;
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(34,197,94,0.6);
+}
+
+#total {
+  font-size: 22px;
+  font-weight: bold;
+  color: #22c55e;
+}
+
+@media print {
+  body * { visibility: hidden; }
+  #receiptContent, #receiptContent * { visibility: visible; }
+  #receiptContent { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; font-size: 18px; line-height: 1.6; }
+  #receiptContent * { font-size: 18px !important; }
+}
+
+.fade { opacity: 0; transform: translateY(10px) scale(0.98); }
+.show { opacity: 1; transform: translateY(0) scale(1); transition: all 0.25s ease; }
+
+.filter-btn {
+  font-size: 11px;
+  padding: 8px 4px;
+  margin: 0;
+  background: #334155;
+  box-shadow: none;
+  flex: 1;
+}
+
+.filter-btn.active {
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34,197,94,0.5);
+}
+
+.light-mode { background: #f1f5f9 !important; color: black !important; }
+.light-mode .card, .light-mode .report, .light-mode .cart-item { background: white !important; color: black !important; }
+.light-mode .header { background: rgba(255,255,255,0.8) !important; }
+.light-mode button { color: white; }
+
+#toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #22c55e;
+  padding: 10px 16px;
+  border-radius: 10px;
+  color: white;
+  opacity: 0;
+  transition: 0.3s;
+  z-index: 9999;
+  font-size: 13px;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+<div id="splash">
+  <img src="https://i.imgur.com/7HOc5OJ.png">
+  <h2>LET'S PARTEAS!</h2>
+</div>
+
+<div class="app">
+  <div class="header">
+    <img src="https://i.imgur.com/7HOc5OJ.png" class="header-logo" onclick="logoTap()">
+    <span>LET'S PARTEAS!</span>
+  </div>
+
+  <div id="dashboard">
+    <h2>📊 Laporan Keuangan</h2>
+    
+    <div style="display:flex; gap:4px; margin-bottom:10px; flex-wrap: nowrap;">
+        <button class="filter-btn active" id="btn-today" onclick="filterToday()">Hari Ini</button>
+        <button class="filter-btn" id="btn-week" onclick="filterLast7Days()">7 Hari</button>
+        <button class="filter-btn" id="btn-month30" onclick="filterLast30Days()">30 Hari</button>
+        <button class="filter-btn" id="btn-month" onclick="filterThisMonth()">Bulan Ini</button>
+        <button class="filter-btn" id="btn-all" onclick="filterAll()">Semua</button>
+    </div>
+
+    <div style="margin:10px 0;">
+      <label style="font-size:12px; color:#94a3b8;">📅 Pilih Tanggal Spesifik</label>
+      <input type="date" id="filterDate" onchange="filterByDate()"
+        style="width:100%; padding:10px; margin-top:5px; border-radius:10px; border:none; background:#1e293b; color:white; font-size:14px; outline:none;">
+    </div>
+    
+    <div id="filterInfo" style="font-size:13px; font-weight:bold; margin-bottom:12px; color:#38bdf8; text-align:center;">Menampilkan: Hari Ini</div>
+
+    <div class="report">
+      Omzet: Rp <span id="omzet">0</span><br>
+      Modal: Rp <span id="modal">0</span><br>
+      Profit: Rp <span id="profit">0</span><br>
+      Margin: <span id="margin">0</span>%<br>
+      Order: <span id="orderCount">0</span><br>
+      Item: <span id="itemCount">0</span>
+    </div>
+
+    <canvas id="chart"></canvas>
+    
+    <h3>⚙️ Control</h3>
+    <button onclick="resetHistoryOnly()" style="background: #ef4444;">🧾 Reset History</button>
+
+    <h3>🧠 Insight Performa</h3>
+    <div id="insight"></div>
+    
+    <h3>🧾 Riwayat Transaksi</h3>
+    <div id="history"></div>
+  </div>
+
+  <div id="cashier">
+    <div id="menu"></div>
+
+    <h2>🛒 Cart (tap to reduce)</h2>
+    <div id="cart"></div>
+    <h3>Total: Rp <span id="total">0</span></h3>
+
+    <input id="payment" placeholder="Customer pays..." readonly>
+
+    <div class="quick-cash">
+      <button onclick="quick(10000)">10K</button>
+      <button onclick="quick(20000)">20K</button>
+      <button onclick="quick(50000)">50K</button>
+      <button onclick="quick(100000)">100K</button>
+    </div>
+
+    <div class="quick-cash">
+      <button onclick="undoPay()" style="background:#64748b;">UNDO</button>
+      <button onclick="clearPay()" style="background:#ef4444;">CLEAR</button>
+    </div>
+
+    <div class="keypad">
+      <button onclick="press(1)">1</button>
+      <button onclick="press(2)">2</button>
+      <button onclick="press(3)">3</button>
+      <button onclick="press(4)">4</button>
+      <button onclick="press(5)">5</button>
+      <button onclick="press(6)">6</button>
+      <button onclick="press(7)">7</button>
+      <button onclick="press(8)">8</button>
+      <button onclick="press(9)">9</button>
+      <button onclick="press(0)">0</button>
+      <button onclick="backspace()">⌫</button>
+      <button onclick="add000()">000</button>
+    </div>
+
+    <button onclick="checkout()" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); margin-top:15px; font-weight:bold; font-size:16px;">Checkout</button>
+  
+    <h2>📋 Order Queue</h2>
+    <div id="waiting"></div>
+    <div id="making"></div>
+    <div id="done"></div>
+    
+    <button onclick="resetQueueOnly()" style="background: #ef4444; margin-top:15px;">📋 Reset Queue</button>
+  </div>
+</div>
+
+<script>
+const ADMIN_PIN = "310820";
+
+// Database Menu Akurat Lengkap Let's Parteas!
+const menu = {
+  "🎧 Mixology Tea Series": [
+    ["Lychee Anthem", 10000], ["Golden Hour", 10000], ["High Voltage", 10000],
+    ["Peachy Blinders", 12000], ["Purple Rain", 13000], ["Purple Sunny", 13000]
+  ],
+  "🎷 White Series (Milk Coffee)": [
+    ["Arenbi (R&B)", 15000], ["White Noise", 15000], ["Pop Vanilla", 15000], ["The OG", 14000]
+  ],
+  "🎸 Black Series (Mocktails)": [
+    ["Mango Tango", 14000], ["Berry Punk", 14000], ["Infused Americano", 12000]
+  ],
+  "📀 Yakult Series": [
+    ["Strawberry Shock", 15000], ["Berry Bash", 15000], ["Peachy Pulse", 15000], ["Mango Magma", 15000]
+  ],
+  "🍵 Matcha Series": [
+    ["Green Day", 14000], ["Pink Bloom", 16000], ["Dark Harmony", 16000], ["Palm Kiss", 14000], ["Sunny Day", 16000]
+  ],
+  "🍫 Chocolate Series": [
+    ["Choco Bliss", 13000], ["Choco Breeze", 13000], ["Berry Crush", 15000], ["Berry Dusk", 15000]
+  ]
+};
+
+// Map database nilai HPP fix per Item hasil kalkulasi matematika presisi terbaru
+const hppDatabase = {
+  // Mixology Tea Series
+  "Lychee Anthem": 2856, 
+  "Golden Hour": 3745, 
+  "High Voltage": 2623,
+  "Peachy Blinders": 5214, 
+  "Purple Rain": 3436, 
+  "Purple Sunny": 3436,
+  
+  // White Series (Iced Milk Coffee)
+  "Arenbi (R&B)": 4783, 
+  "White Noise": 5917, 
+  "Pop Vanilla": 5235, 
+  "The OG": 4379,
+  
+  // Black Series (Coffee Mocktails)
+  "Mango Tango": 4211, 
+  "Berry Punk": 4327, 
+  "Infused Americano": 1937, // Tetap dikunci sesuai data awal dasar menu
+  
+  // Yakult Series (Fix 2 Botol Yakult)
+  "Strawberry Shock": 8256, 
+  "Berry Bash": 7640, 
+  "Peachy Pulse": 8256, 
+  "Mango Magma": 8256,
+  
+  // MATCHA Series (Layering System & Premium Matcha Rp45k/50g)
+  "Green Day": 6912, 
+  "Pink Bloom": 7496, 
+  "Dark Harmony": 7645, 
+  "Palm Kiss": 6959, 
+  "Sunny Day": 7028,
+  
+  // CHOCOLATE Series (Base Lama: 50ml UHT + 20ml Evaporasi)
+  "Choco Bliss": 5116, 
+  "Choco Breeze": 5003, 
+  "Berry Crush": 5816, 
+  "Berry Dusk": 5439
+};
+
+let cart={}, orderId=1;
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+let omzet=0, orderCount=0, itemCount=0;
+let history = JSON.parse(localStorage.getItem("history")) || [];
+let lastCelebration = false;
+let currentFilter = "today"; 
+let paymentHistory=[];
+let cashierName = "Kasir 1";
+let lastTransaction = null;
+let tapCount = 0;
+let tapTimer;
+
+function renderMenu(){
+  let html = "<h2>Menu</h2>";
+  for(let cat in menu){
+    html += `<h3 style="border-bottom: 1px solid #334155; padding-bottom: 5px; color: #38bdf8;">${cat}</h3>`;
+    html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">`;
+    menu[cat].forEach((m, i)=>{
+      html += `
+        <button onclick="add('${cat}', ${i})" style="text-align: left; font-size: 13px; padding: 10px;">
+          ${m[0]}<br><span style="font-size:11px; opacity:0.8;">Rp ${m[1].toLocaleString('id-ID')}</span>
+        </button>
+      `;
+    });
+    html += `</div>`;
+  }
+  document.getElementById("menu").innerHTML = html;
+}
+
+function getCost(name){
+  return hppDatabase[name] || 0;
+}
+
+function add(cat, i){
+  let [n, p] = menu[cat][i];
+  if(!cart[n]) cart[n] = {qty: 0, price: p};
+  cart[n].qty++;
+  renderCart();
+}
+
+function renderCart(){
+  let total=0, html="";
+  for(let n in cart){
+    let c = cart[n];
+    let sub = c.qty * c.price;
+    total += sub;
+    html += `
+      <div class="cart-item" onclick="reduce('${n}')" style="cursor:pointer;">
+        <div style="display:flex; justify-content:space-between;">
+          <span>❌ ${n} <b>x${c.qty}</b></span>
+          <span>${rupiah(sub)}</span>
+        </div>
+      </div>`;
+  }
+  document.getElementById("cart").innerHTML = html;
+  document.getElementById("total").innerText = total.toLocaleString("id-ID");
+}
+
+function reduce(n){
+  cart[n].qty--;
+  if(cart[n].qty <= 0) delete cart[n];
+  renderCart();
+}
+
+function quick(a){
+  let i = document.getElementById("payment");
+  let cur = parseInt(i.value) || 0;
+  paymentHistory.push(cur);
+  i.value = cur + a;
+}
+
+function undoPay(){
+  if(paymentHistory.length) document.getElementById("payment").value = paymentHistory.pop();
+}
+
+function clearPay(){
+  document.getElementById("payment").value = "";
+  paymentHistory = [];
+}
+
+function press(n){ document.getElementById("payment").value += n; }
+function backspace(){ document.getElementById("payment").value = document.getElementById("payment").value.slice(0,-1); }
+function add000(){ document.getElementById("payment").value += "000"; }
+
+function checkout(){
+  let total = parseInt(document.getElementById("total").innerText.replace(/\D/g,'')) || 0;
+  let pay = parseInt(document.getElementById("payment").value);
+
+  if(total === 0) return alert("Keranjang masih kosong!");
+  if(!pay || pay < total) return alert("Pembayaran kurang!");
+
+  let totalCost = 0;
+  for(let n in cart){
+    totalCost += getCost(n) * cart[n].qty;
+  }
+
+  let profit = total - totalCost;
+  let margin = total ? Math.round((profit / total) * 100) : 0;
+  let currentId = Date.now();
+
+  playTing();
+  orders.push({id: currentId, items: {...cart}, status: "waiting"});
+  localStorage.setItem("orders", JSON.stringify(orders));
+  renderQueue();
+  party();
+
+  let transaction = {
+    date: new Date().toISOString(),
+    items: JSON.parse(JSON.stringify(cart)),
+    total: total,
+    cost: totalCost,
+    profit: profit,
+    margin: margin,
+    pay: pay,
+    change: pay - total,
+    id: currentId
+  };
+
+  history.push(transaction);
+  localStorage.setItem("history", JSON.stringify(history));
+
+  showReceipt(cart, total, pay);
+  lastTransaction = { cart: JSON.parse(JSON.stringify(cart)), total: total, pay: pay };
+
+  refreshDashboardView();
+
+  cart = {};
+  clearPay();
+  renderCart();
+}
+
+function showReceipt(cartData, total, pay){
+  let date = new Date().toLocaleString();
+  let change = pay - total;
+  let html = `
+  <div style="width:100%; padding:10px; font-family:monospace; font-size:14px; color:black; text-align:left;">
+      <center>
+        <img src="https://i.imgur.com/7HOc5OJ.png" style="width:40px; filter:none;"><br>
+        <b>LET'S PARTEAS!</b><br>
+        <small>${date}</small><br>
+        <small>${cashierName}</small>
+      </center>
+      <hr style="border-top:1px dashed #000; margin:6px 0;">
+  `;
+
+  for(let n in cartData){
+    let qty = cartData[n].qty;
+    let sub = qty * cartData[n].price;
+    html += `
+      <div style="display:flex; justify-content:space-between;">
+        <span>${n} x${qty}</span>
+        <span>${sub.toLocaleString('id-ID')}</span>
+      </div>
+    `;
+  }
+
+  html += `
+    <hr style="border-top:1px dashed #000; margin:6px 0;">
+    <div style="display:flex; justify-content:space-between; font-weight:bold;">
+      <span>Total</span>
+      <span>${rupiah(total)}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between;">
+      <span>Bayar</span>
+      <span>${rupiah(pay)}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between;">
+      <span>Kembali</span>
+      <span>${rupiah(change)}</span>
+    </div>
+    <hr style="border-top:1px dashed #000; margin:6px 0;">
+    <center>
+      <small>Terima kasih 🙏</small><br>
+      <small>LET'S PARTEAS!</small>
+    </center>
+  </div>
+  `;
+
+  document.getElementById("receiptContent").innerHTML = html;
+  document.getElementById("receiptPopup").style.display = "flex";
+}
+
+function closeReceipt(){ document.getElementById("receiptPopup").style.display = "none"; }
+function printReceipt(){ window.print(); }
+
+function shareReceipt(){
+  if(!lastTransaction){ alert("Belum ada transaksi!"); return; }
+  let text = `🧾 *LET'S PARTEAS!*\n━━━━━━━━━━━━━━\n`;
+  for(let n in lastTransaction.cart){
+    text += `• ${n} x${lastTransaction.cart[n].qty}\n`;
+  }
+  text += `━━━━━━━━━━━━━━\n💰 Total: ${rupiah(lastTransaction.total)}\n💵 Bayar: ${rupiah(lastTransaction.pay)}`;
+  if(navigator.share){ navigator.share({ title: "Struk", text: text }); } else { alert(text); }
+}
+
+function rupiah(angka){ return "Rp " + angka.toLocaleString("id-ID"); }
+
+function animateValue(id, start, end, duration = 300){
+  let el = document.getElementById(id);
+  let range = end - start;
+  let startTime = null;
+  function step(timestamp){
+    if(!startTime) startTime = timestamp;
+    let progress = Math.min((timestamp - startTime) / duration, 1);
+    el.innerText = Math.floor(progress * range + start).toLocaleString("id-ID");
+    if(progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function party(){ confetti({ particleCount: 60, spread: 50, origin: { y: 0.7 } }); }
+
+function logoTap(){
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(()=>{
+    if(tapCount >= 5){ toggleTheme(); }
+    else if(tapCount >= 3){
+      confetti({ particleCount: 150, spread: 80 });
+      showToast("🎉 LET'S PARTEAS!!!");
+    } else if(tapCount === 1){
+      party();
+    }
+    tapCount = 0;
+  }, 350);
+}
+
+function toggleTheme(){
+  document.body.classList.toggle("light-mode");
+  isLight = document.body.classList.contains("light-mode");
+  showToast(isLight ? "🌞 Mode Siang" : "🌙 Mode Malam");
+}
+
+function showToast(text){
+  let t = document.getElementById("toast");
+  t.innerText = text;
+  t.classList.add("show");
+  setTimeout(()=>{ t.classList.remove("show"); }, 1500);
+}
+
+function playTing(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine"; osc.frequency.value = 1200;
+    gain.gain.value = 0.1;
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.stop(ctx.currentTime + 0.2);
+  } catch(e){}
+}
+
+function renderQueue(){
+  let w="", m="", d="";
+  orders.forEach(o=>{
+    let txt="";
+    for(let n in o.items){ txt += `${n} x${o.items[n].qty}, `; }
+    let icon = o.status=="waiting" ? "🟡" : (o.status=="making" ? `<span class="spin">☕</span>` : "✅");
+    let card = `
+      <div class="queue-card ${o.status}">
+        <b>${icon} Order #${o.id.toString().slice(-4)}</b><br>
+        <span style="font-size:13px;">${txt.slice(0, -2)}</span><br>
+        ${o.status=="waiting"?`<button onclick="setStatus(${o.id},'making')">Masak</button>`:""}
+        ${o.status=="making"?`<button onclick="setStatus(${o.id},'done')">Selesai</button>`:""}
+      </div>`;
+    if(o.status=="waiting") w+=card;
+    if(o.status=="making") m+=card;
+    if(o.status=="done") d+=card;
+  });
+  document.getElementById("waiting").innerHTML = w;
+  document.getElementById("making").innerHTML = m;
+  document.getElementById("done").innerHTML = d;
+}
+
+function setStatus(id, s){
+  let order = orders.find(o=>o.id==id);
+  if(order){
+    order.status = s;
+    if(s === "done") playTing();
+    localStorage.setItem("orders", JSON.stringify(orders));
+    renderQueue();
+  }
+}
+
+let chart;
+function renderChart(data = history){
+  let chartEl = document.getElementById("chart");
+  let profitMap = getProfitPerMenu(data);
+
+  if(Object.keys(profitMap).length === 0){
+    chartEl.style.display = "none";
+    let old = document.getElementById("chartEmpty");
+    if(old) old.remove();
+    chartEl.insertAdjacentHTML("afterend", `<div id="chartEmpty" style="text-align:center; opacity:0.5; padding:20px; font-size:14px;">📊 Belum ada data penjualan</div>`);
+    return;
+  } else {
+    chartEl.style.display = "block";
+    let old = document.getElementById("chartEmpty");
+    if(old) old.remove();
+  }
+
+  if(chart) chart.destroy();
+  chart = new Chart(chartEl, {
+    type: "bar",
+    data: {
+      labels: Object.keys(profitMap),
+      datasets: [{
+        label: "Profit (Rp)",
+        data: Object.values(profitMap),
+        backgroundColor: "#22c55e"
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+}
+
+function getProfitPerMenu(data){
+  let map = {};
+  data.forEach(h=>{
+    for(let n in h.items){
+      let qty = h.items[n].qty;
+      let price = h.items[n].price;
+      let profit = (price - getCost(n)) * qty;
+      map[n] = (map[n] || 0) + profit;
+    }
+  });
+  return map;
+}
+
+function updateReportFromHistory(data){
+  let totalOmzet = 0, totalModal = 0, totalItem = 0;
+  data.forEach(h=>{
+    totalOmzet += h.total;
+    totalModal += h.cost || 0;
+    for(let n in h.items){ totalItem += h.items[n].qty; }
+  });
+
+  let totalProfit = totalOmzet - totalModal;
+  let margin = totalOmzet ? Math.round((totalProfit / totalOmzet) * 100) : 0;
+
+  animateValue("omzet", 0, totalOmzet);
+  animateValue("modal", 0, totalModal);
+  animateValue("profit", 0, totalProfit);
+  document.getElementById("margin").innerText = margin;
+  document.getElementById("itemCount").innerText = totalItem;
+  document.getElementById("orderCount").innerText = data.length;
+}
+
+function renderHistory(data = history){
+  let html = "";
+  data.slice().reverse().forEach(h => {
+    html += `
+      <div class="card" onclick="viewHistory(${h.id})" style="cursor:pointer;">
+        <b>🧾 Order #${h.id.toString().slice(-4)}</b><br>
+        <small>${new Date(h.date).toLocaleString()}</small><br>
+        💰 ${rupiah(h.total)} | Profit: ${rupiah(h.profit || 0)}
+      </div>`;
+  });
+  document.getElementById("history").innerHTML = html;
+}
+
+function viewHistory(id){
+  let h = history.find(x => x.id == id);
+  if(!h) return;
+  showReceipt(h.items, h.total, h.pay);
+}
+
+// FUNGSI AKURASI FILTER BARU (Harian, Mingguan, Bulanan, Berdasarkan Rentang Hari)
+
+function filterToday(){
+  currentFilter = "today";
+  let todayStr = new Date().toISOString().split('T')[0];
+  let filtered = history.filter(h => h.date.startsWith(todayStr));
+  executeFilterUpdates(filtered, "btn-today", "Hari Ini");
+}
+
+function filterLast7Days(){
+  currentFilter = "week";
+  let cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 7);
+  let filtered = history.filter(h => new Date(h.date) >= cutoff);
+  executeFilterUpdates(filtered, "btn-week", "7 Hari Terakhir");
+}
+
+function filterLast30Days(){
+  currentFilter = "month30";
+  let cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  let filtered = history.filter(h => new Date(h.date) >= cutoff);
+  executeFilterUpdates(filtered, "btn-month30", "30 Hari Terakhir");
+}
+
+function filterThisMonth(){
+  currentFilter = "month";
+  let now = new Date();
+  let currentYearMonth = now.toISOString().slice(0, 7); // Hasil: "YYYY-MM"
+  let filtered = history.filter(h => h.date.startsWith(currentYearMonth));
+  
+  // Format info bulan dalam bahasa Indonesia ringkas
+  let options = { month: 'long', year: 'numeric' };
+  let monthName = now.toLocaleDateString('id-ID', options);
+  executeFilterUpdates(filtered, "btn-month", "Bulan Ini (" + monthName + ")");
+}
+
+function filterAll(){
+  currentFilter = "all";
+  executeFilterUpdates(history, "btn-all", "Semua Transaksi");
+}
+
+function filterByDate(){
+  currentFilter = "date";
+  let selected = document.getElementById("filterDate").value;
+  if(!selected) return;
+  let filtered = history.filter(h => h.date.startsWith(selected));
+  
+  let formattedDate = new Date(selected).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  executeFilterUpdates(filtered, null, "Tanggal: " + formattedDate);
+}
+
+// Fungsi pembantu untuk menyegarkan tampilan dashboard berdasarkan filter aktif saat ini
+function refreshDashboardView(){
+  if(currentFilter === "today") filterToday();
+  else if(currentFilter === "week") filterLast7Days();
+  else if(currentFilter === "month30") filterLast30Days();
+  else if(currentFilter === "month") filterThisMonth();
+  else if(currentFilter === "all") filterAll();
+  else if(currentFilter === "date") filterByDate();
+}
+
+function executeFilterUpdates(filteredData, btnId, infoText){
+  renderChart(filteredData);
+  renderInsight(filteredData);
+  renderHistory(filteredData);
+  updateReportFromHistory(filteredData);
+  
+  if(btnId) {
+    setActiveBtn(btnId);
+    document.getElementById("filterDate").value = ""; // Reset kalender input jika klik tombol pintasan
+  } else {
+    // Jika dari kalender tanggal spesifik, nonaktifkan kilatan warna di tombol preset luar
+    document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  }
+  document.getElementById("filterInfo").innerText = "Menampilkan: " + infoText;
+}
+
+function renderInsight(data){
+  let profitMap = getProfitPerMenu(data);
+  let entries = Object.entries(profitMap);
+  if(entries.length === 0){
+    document.getElementById("insight").innerHTML = "<div class='card'>Belum ada data transaksi</div>";
+    return;
+  }
+  entries.sort((a,b)=>b[1]-a[1]);
+  let html = `<div class="card">🏆 Paling Cuan: <b>${entries[0][0]}</b> (${rupiah(entries[0][1])})</div>`;
+  if(entries.length > 1){
+    html += `<div class="card" style="border-left:4px solid #ef4444;">⚠️ Margin Kecil: <b>${entries[entries.length-1][0]}</b></div>`;
+  }
+  document.getElementById("insight").innerHTML = html;
+}
+
+function setActiveBtn(btnId){
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  let activeBtn = document.getElementById(btnId);
+  if(activeBtn) activeBtn.classList.add("active");
+}
+
+function goKasir(){
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("cashier").style.display = "block";
+  document.getElementById("btnKasir").classList.add("active-tab");
+  document.getElementById("btnDash").classList.remove("active-tab");
+}
+
+function goDashboard(){
+  document.getElementById("cashier").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  document.getElementById("btnKasir").classList.remove("active-tab");
+  document.getElementById("btnDash").classList.add("active-tab");
+  refreshDashboardView();
+}
+
+function resetHistoryOnly(){
+  if(!confirm("Hapus seluruh riwayat transaksi?") || prompt("🔒 PIN Admin:") !== ADMIN_PIN) return showToast("Gagal/PIN Salah");
+  history = []; localStorage.removeItem("history"); refreshDashboardView();
+}
+
+function resetQueueOnly(){
+  if(!confirm("Hapus antrian saat ini?") || prompt("🔒 PIN Admin:") !== ADMIN_PIN) return showToast("Gagal/PIN Salah");
+  orders = []; localStorage.removeItem("orders"); renderQueue();
+}
+
+window.onload = function(){
+  renderMenu();
+  goKasir();
+  renderQueue();
+  filterToday();
+}
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js").catch(err => console.log(err));
+}
+</script>
+
+<div id="receiptPopup" class="popup">
+  <div class="popup-box" style="background: white; color: black;">
+    <div id="receiptContent"></div>
+    <div style="display:flex; gap: 4px;">
+      <button onclick="shareReceipt()" style="background:#3b82f6;">📤 Share</button>
+      <button onclick="printReceipt()" style="background:#22c55e;">🖨 Print</button>
+      <button onclick="closeReceipt()" style="background:#64748b;">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <button onclick="goKasir()" id="btnKasir">
+    <span class="icon">🧾</span><span>Kasir</span>
+  </button>
+  <button onclick="goDashboard()" id="btnDash">
+    <span class="icon">📊</span><span>Dashboard</span>
+  </button>
+</div>
+<div id="toast"></div>
+</body>
+</html>
